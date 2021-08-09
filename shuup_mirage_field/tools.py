@@ -6,7 +6,7 @@ from .crypto import Crypto
 
 
 class Migrator:
-    def __init__(self, app, model, field, key=None, tofield=None, idfield='id'):
+    def __init__(self, app, model, field, key=None, tofield=None, idfield="id"):
         self.app = app
         self.model = model.lower()
         self.field = field.lower()
@@ -15,19 +15,19 @@ class Migrator:
         self.idfield = idfield
 
     def encrypt(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
-        return self.executor(apps, schema_editor, offset, total, limit, method='encrypt')
+        return self.executor(apps, schema_editor, offset, total, limit, method="encrypt")
 
     def decrypt(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
-        return self.executor(apps, schema_editor, offset, total, limit, method='decrypt')
+        return self.executor(apps, schema_editor, offset, total, limit, method="decrypt")
 
     def copy_to(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
-        return self.executor(apps, schema_editor, offset, total, limit, method='copy_to')
+        return self.executor(apps, schema_editor, offset, total, limit, method="copy_to")
 
     def encrypt_to(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
-        return self.executor(apps, schema_editor, offset, total, limit, method='encrypt_to')
+        return self.executor(apps, schema_editor, offset, total, limit, method="encrypt_to")
 
     def decrypt_to(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
-        return self.executor(apps, schema_editor, offset, total, limit, method='decrypt_to')
+        return self.executor(apps, schema_editor, offset, total, limit, method="decrypt_to")
 
     def executor(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000, method=None):
         if not method:
@@ -53,7 +53,7 @@ class Migrator:
             if limit > total:
                 limit = total
 
-        t = tqdm(total=total-offset)
+        t = tqdm(total=total - offset)
         while offset < total:
             value_list = []
             with connections[db_alias].cursor() as cursor:
@@ -65,26 +65,24 @@ class Migrator:
                         f"{self.idfield}>{offset} order by {self.idfield} limit {limit};"
                     )
                 for query in cursor.fetchall():
-                    if method in ['encrypt', 'encrypt_to']:
+                    if method in ["encrypt", "encrypt_to"]:
                         value_list.append([query[0], self.crypto.encrypt(query[1])])
-                    elif method in ['decrypt', 'decrypt_to']:
-                        text = self.crypto.decrypt(query[1]) or ''
+                    elif method in ["decrypt", "decrypt_to"]:
+                        text = self.crypto.decrypt(query[1]) or ""
                         value_list.append([query[0], text.replace("'", "''")])
-                    elif method == 'copy_to':
-                        text = query[1] or ''
+                    elif method == "copy_to":
+                        text = query[1] or ""
                         value_list.append([query[0], text.replace("'", "''")])
-                execute_sql = ''
+                execute_sql = ""
                 for value in value_list:
-                    if method in ['encrypt', 'decrypt']:
+                    if method in ["encrypt", "decrypt"]:
                         if value[1] is None:
-                            execute_sql += (
-                                f"update {db_table} set {self.field}=NULL where {self.idfield}='{value[0]}';"
-                            )
+                            execute_sql += f"update {db_table} set {self.field}=NULL where {self.idfield}='{value[0]}';"
                         else:
                             execute_sql += (
                                 f"update {db_table} set {self.field}='{value[1]}' where {self.idfield}='{value[0]}';"
                             )
-                    elif method in ['copy_to', 'encrypt_to', 'decrypt_to']:
+                    elif method in ["copy_to", "encrypt_to", "decrypt_to"]:
                         if value[1] is None:
                             execute_sql += (
                                 f"update {db_table} set {self.tofield}=NULL where {self.idfield}='{value[0]}';"

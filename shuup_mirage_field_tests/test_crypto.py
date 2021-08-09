@@ -3,10 +3,9 @@ from mirage.crypto import Crypto
 
 
 class TestCryptoECB(TestCase):
-
     def setUp(self):
-        self.crypto = Crypto(mode='ECB')
-        self.value = 'hello,text'
+        self.crypto = Crypto(mode="ECB")
+        self.value = "hello,text"
         self.encrypted = "4DIIbNsZPqO1DuXX1GjpkQ=="
 
     def test_ecb_encrypt(self):
@@ -17,10 +16,9 @@ class TestCryptoECB(TestCase):
 
 
 class TestCryptoCBC(TestCase):
-
     def setUp(self) -> None:
-        self.crypto = Crypto(mode='CBC')
-        self.value = 'hello,text'
+        self.crypto = Crypto(mode="CBC")
+        self.value = "hello,text"
         self.encrypted = "E_RFOSafjW-FQ-PDkXkv5g=="
 
     def test_cbc_encrypt(self):
