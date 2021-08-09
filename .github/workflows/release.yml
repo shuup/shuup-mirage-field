@@ -1,0 +1,100 @@
+name: "Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version of the release, e.g. 1.0.0"
+        required: true
+
+# Note: the `sed` scripting below relies quite heavily on GNU sed extensions.
+# https://www.gnu.org/software/sed/manual/html_node/Extended-Commands.html
+jobs:
+  build:
+    name: "Release new version"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Update the changelog"
+        # Find the first line that starts with `###` or `## [<number>` from the CHANGELOG and insert the new version header before it.
+        run: >
+          current_date="$(date '+%Y-%m-%d')"
+          && sed -i "0,/^\(###\|## *\[[0-9]\).*/{s//## [${{ github.event.inputs.version }}] - ${current_date}\n\n&/}" CHANGELOG.md
+
+      - name: "Bump setup.cfg to new version"
+        # Find the line that starts with `version =` from setup.cfg and change the version number.
+        run: sed -i 's/^version *=.*/version = ${{ github.event.inputs.version }}/' setup.cfg
+
+      - name: "Bump pyproject.toml to new version"
+        # Find the line that start swith `version =` from pyproject.toml and change the version number.
+        run: sed -i 's/^version *=.*/version = "${{ github.event.inputs.version }}"/' pyproject.toml
+
+      - name: "Extract version's changelog for release notes and tag message"
+        id: release_notes
+        # 1. Find the lines between the first `## [<number>` and the second `## [<number>`. (https://stackoverflow.com/a/40450300/9835872)
+        # 2. Add a title to the tag message. (https://stackoverflow.com/a/54715861/9835872)
+        run: >
+          sed '1,/^## *\[[0-9]/d;/^## *\[[0-9]/Q' CHANGELOG.md > release_notes.txt
+          && echo "$(echo 'Release ${{ github.event.inputs.version }}'; cat release_notes.txt)" > tag_message.txt
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+
+      - name: "Set up Node"
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: "Install build dependencies"
+        # `gettext` is needed for `compilemessages`.
+        # Installing these PyPI packages separately because each step benefits from the previously installed packages.
+        run: >
+          sudo apt-get install --no-install-recommends --assume-yes gettext
+          && pip install --upgrade --disable-pip-version-check pip
+          && pip install --upgrade setuptools wheel
+          && pip install --upgrade poetry shuup
+
+      - name: "Build the wheel"
+        run: python setup.py bdist_wheel sdist
+
+      - name: "Push the wheel to Shuup PyPI"
+        run: >
+          poetry config repositories.shuup '${{ secrets.SHUUP_PYPI_URL }}'
+          && poetry publish --repository=shuup --username='${{ secrets.SHUUP_PYPI_USERNAME }}' --password='${{ secrets.SHUUP_PYPI_PASSWORD }}'
+
+      - name: "Set Git comment char to @"
+        # Set Git comment character to @ so that we can have leading #'s in the tag message. (https://stackoverflow.com/a/22936439/9835872)
+        run: git config core.commentchar '@'
+
+      - name: "Commit changes"
+        uses: EndBug/add-and-commit@f1d41def84174d477303087e8d31ffaf97c26008  # v7.1.1 tag
+        with:
+          add: '["setup.cfg", "pyproject.toml", "CHANGELOG.md"]'
+          message: 'Release ${{ github.event.inputs.version }}'
+          tag: 'v${{ github.event.inputs.version }} --annotate --file=tag_message.txt'
+
+      - name: "Unset Git comment char"
+        run: git config --unset core.commentchar
+
+      - name: "Create a GitHub release"
+        uses: softprops/action-gh-release@91409e712cf565ce9eff10c87a8d1b11b81757ae  # v1 tag
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body_path: release_notes.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Bump setup.cfg version to post+gitver"
+        run: sed -i 's/^version *=.*$/&.post+gitver/' setup.cfg
+
+      - name: "Commit changes"
+        uses: EndBug/add-and-commit@f1d41def84174d477303087e8d31ffaf97c26008  # v7.1.1 tag
+        with:
+          add: 'setup.cfg'
+          message: 'Post-release update for ${{ github.event.inputs.version }}'

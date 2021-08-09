@@ -1,0 +1,7 @@
+include README.md
+include CHANGELOG.md
+
+recursive-include shuup_addon_template/locale *.mo
+recursive-include shuup_addon_template/templates *.jinja *.txt
+recursive-include shuup_addon_template/static *.*
+recursive-exclude shuup_addon_template/static *.map
