@@ -44,8 +44,7 @@ class Migrator:
             total = model.objects.using(db_alias).count()
         else:
             if not total:
-                last_record = model.objects.using(
-                    db_alias).order_by(f"-{self.idfield}").first()
+                last_record = model.objects.using(db_alias).order_by(f"-{self.idfield}").first()
                 if last_record:
                     total = getattr(last_record, self.idfield)
                 else:
@@ -90,16 +89,14 @@ class Migrator:
 
         model = apps.get_model(self.app, self.model)
         db_alias, db_table = self.get_db_parameters(apps, model, schema_editor)
-        limit, total = self.calculate_total_and_limit(
-            model, db_alias, limit, total)
+        limit, total = self.calculate_total_and_limit(model, db_alias, limit, total)
 
         t = tqdm(total=total - offset)
         while offset < total:
             value_list = []
             with connections[db_alias].cursor() as cursor:
                 if limit == -1:
-                    cursor.execute(
-                        f"select {self.idfield}, {self.field} from {db_table};")
+                    cursor.execute(f"select {self.idfield}, {self.field} from {db_table};")
                 else:
                     cursor.execute(
                         f"select {self.idfield}, {self.field} from {db_table} where {self.idfield}>{offset} "
@@ -107,8 +104,7 @@ class Migrator:
                     )
                 cursor_value_list = self.process_cursor(cursor, method)
                 value_list.extend(cursor_value_list)
-                execute_sql = self.process_value_list(
-                    db_table, method, value_list)
+                execute_sql = self.process_value_list(db_table, method, value_list)
                 cursor.execute(execute_sql)
             if value_list:
                 if limit == -1:
