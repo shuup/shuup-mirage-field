@@ -2,12 +2,12 @@
 host = https://www.transifex.com
 lang_map = cmn:zh_Hans
 
-[shuup.shuup_addon_template]
-file_filter = shuup_addon_template/locale/<lang>/LC_MESSAGES/django.po
+[shuup.shuup_mirage_field]
+file_filter = shuup_mirage_field/locale/<lang>/LC_MESSAGES/django.po
 source_lang = en
 type = PO
 
-[shuup.shuup_addon_template_javascript]
-file_filter = shuup_addon_template/locale/<lang>/LC_MESSAGES/djangojs.po
+[shuup.shuup_mirage_field_javascript]
+file_filter = shuup_mirage_field/locale/<lang>/LC_MESSAGES/djangojs.po
 source_lang = en
 type = PO

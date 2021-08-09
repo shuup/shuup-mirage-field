@@ -44,6 +44,6 @@ jobs:
     - name: Check black
       run: black --check --diff .
     - name: Run tests
-      run: py.test -ra -vvv shuup_addon_template_tests --cov shuup_addon_template
+      run: py.test -ra -vvv shuup_mirage_field_tests --cov shuup_mirage_field
     - name: Compile messages
       run: python -m shuup_workbench compilemessages

@@ -7,3 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 Enter here all the changes made to the development version
+
+### Changed
+
+- Format the code according to Shuup needs
