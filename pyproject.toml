@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "shuup-mirage-field"
 version = "1.0.0"
-description = "Shuup Mirage field"
+description = "Shuup mirage field"
 authors = ["Shuup <devs@shuup.com>"]
 
 [build-system]

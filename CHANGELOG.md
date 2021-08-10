@@ -8,6 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Enter here all the changes made to the development version
 
-### Changed
+### Added
 
-- Format the code according to Shuup needs
+- Add initial version and format the code according to Shuup needs
