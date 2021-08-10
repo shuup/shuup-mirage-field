@@ -25,10 +25,10 @@ jobs:
 
       - name: "Install build dependencies"
         # Installing these PyPI packages separately because each step benefits from the previously installed packages.
-        run: >
-          && pip install --upgrade --disable-pip-version-check pip
-          && pip install --upgrade setuptools wheel
-          && pip install --upgrade poetry shuup
+        run: |
+          pip install --upgrade --disable-pip-version-check pip
+          pip install --upgrade setuptools wheel
+          pip install --upgrade poetry shuup
 
       - name: "Build the wheel"
         run: |
