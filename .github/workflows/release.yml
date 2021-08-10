@@ -60,12 +60,10 @@ jobs:
           && pip install --upgrade poetry shuup
 
       - name: "Build the wheel"
-        run: python setup.py bdist_wheel sdist
-
-      - name: "Push the wheel to Shuup PyPI"
-        run: >
-          poetry config repositories.shuup '${{ secrets.SHUUP_PYPI_URL }}'
-          && poetry publish --repository=shuup --username='${{ secrets.SHUUP_PYPI_USERNAME }}' --password='${{ secrets.SHUUP_PYPI_PASSWORD }}'
+        run: |
+          rm -rf build/
+          rm -rf dist/
+          python setup.py bdist_wheel
 
       - name: "Set Git comment char to @"
         # Set Git comment character to @ so that we can have leading #'s in the tag message. (https://stackoverflow.com/a/22936439/9835872)
@@ -98,3 +96,9 @@ jobs:
         with:
           add: 'setup.cfg'
           message: 'Post-release update for ${{ github.event.inputs.version }}'
+
+      - name: "Upload the wheel to PYPI"
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

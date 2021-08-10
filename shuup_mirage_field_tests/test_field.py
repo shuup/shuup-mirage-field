@@ -1,12 +1,13 @@
 from django.test import TestCase
+
 from .models import TestModel
 
 
 class TestField(TestCase):
-    CHAR = 'hello,char'
-    TEXT = 'hello,text'
+    CHAR = "hello,char"
+    TEXT = "hello,text"
     INTEGER = 1234567890
-    EMAIL = 'hello@email.com'
+    EMAIL = "hello@email.com"
 
     @classmethod
     def setUpTestData(cls):
@@ -18,7 +19,7 @@ class TestField(TestCase):
         obj.save()
 
     def setUp(self):
-        self.obj = TestModel.objects.latest('id')
+        self.obj = TestModel.objects.latest("id")
 
     def test_char_field(self):
         self.assertEqual(self.obj.char, self.CHAR)

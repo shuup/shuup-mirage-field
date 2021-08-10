@@ -3,7 +3,6 @@ import base64
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-
 from django.conf import settings
 from django.utils.encoding import force_bytes, force_str
 
@@ -21,7 +20,6 @@ class BaseCipher:
 
 
 class ECBCipher(BaseCipher):
-
     def encrypt(self, text):
         encryptor = Cipher(algorithms.AES(self.key), modes.ECB(), default_backend()).encryptor()
         padder = padding.PKCS7(algorithms.AES(self.key).block_size).padder()
@@ -36,8 +34,8 @@ class ECBCipher(BaseCipher):
         unpadded_text = padder.update(decrypted_text) + padder.finalize()
         return force_str(unpadded_text)
 
-class CBCCipher(BaseCipher):
 
+class CBCCipher(BaseCipher):
     def encrypt(self, text) -> str:
         encryptor = Cipher(algorithms.AES(self.key), modes.CBC(self.iv), default_backend()).encryptor()
         padder = padding.PKCS7(algorithms.AES(self.key).block_size).padder()
@@ -52,8 +50,8 @@ class CBCCipher(BaseCipher):
         unpadded_text = padder.update(decrypted_text) + padder.finalize()
         return force_str(unpadded_text)
 
-class Crypto:
 
+class Crypto:
     def __init__(self, key=None, mode=None, iv=None):
         if key is None:
             key = getattr(settings, "MIRAGE_SECRET_KEY", None) or getattr(settings, "SECRET_KEY")
@@ -62,7 +60,7 @@ class Crypto:
         if mode is None:
             mode = getattr(settings, "MIRAGE_CIPHER_MODE", "ECB")
         if iv is None:
-            iv=getattr(settings, "MIRAGE_CIPHER_IV", "1234567890abcdef")
+            iv = getattr(settings, "MIRAGE_CIPHER_IV", "1234567890abcdef")
         self.cipher = eval(f"{mode}Cipher")(key=key, iv=force_bytes(iv))
 
     def encrypt(self, text):

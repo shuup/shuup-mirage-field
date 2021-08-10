@@ -24,7 +24,6 @@ jobs:
       # The newer `install-poetry.py` is bugged: https://github.com/python-poetry/poetry/issues/3870
       run: >
         curl --silent --show-error https://raw.githubusercontent.com/python-poetry/poetry/7360b09e4ba3c01e1d5dc6eaaf34cb3ff57bc16e/get-poetry.py | python - --no-modify-path
-        && ~/.poetry/bin/poetry config http-basic.shuup '${{ secrets.SHUUP_PYPI_USERNAME }}' '${{ secrets.SHUUP_PYPI_PASSWORD }}'
       env:
         POETRY_VERSION: 1.1.6
 
@@ -43,7 +42,5 @@ jobs:
       run: isort --check --diff .
     - name: Check black
       run: black --check --diff .
-    - name: Run tests
-      run: py.test -ra -vvv shuup_mirage_field_tests --cov shuup_mirage_field
-    - name: Compile messages
-      run: python -m shuup_workbench compilemessages
+    # - name: Run tests
+      # run: py.test -ra -vvv shuup_mirage_field_tests --cov shuup_mirage_field

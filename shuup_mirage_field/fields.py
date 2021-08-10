@@ -1,5 +1,6 @@
 from django.core import exceptions
 from django.db import models
+
 from .crypto import Crypto
 from .exceptions import EncryptedFieldException
 
@@ -9,7 +10,7 @@ class EncryptedMixin(models.Field):
     prepared_max_length = None
 
     def __init__(self, key=None, **kwargs):
-        kwargs.setdefault('max_length', self.prepared_max_length)
+        kwargs.setdefault("max_length", self.prepared_max_length)
         self.crypto = Crypto(key)
         super().__init__(**kwargs)
 
@@ -38,7 +39,7 @@ class EncryptedTextField(EncryptedMixin, models.TextField):
 
 
 class EncryptedCharField(EncryptedMixin, models.CharField):
-    prepared_max_length =255
+    prepared_max_length = 255
 
 
 class EncryptedEmailField(EncryptedMixin, models.EmailField):
@@ -55,9 +56,9 @@ class EncryptedIntegerField(EncryptedMixin, models.CharField):
             return int(value)
         except (TypeError, ValueError):
             raise exceptions.ValidationError(
-                self.error_messages['invalid'],
-                code='invalid',
-                params={'value': value},
+                self.error_messages["invalid"],
+                code="invalid",
+                params={"value": value},
             )
 
     def check(self, **kwargs):
