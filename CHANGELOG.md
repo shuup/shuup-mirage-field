@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Enter here all the changes made to the development version
 
+## [2.2.0] - 2021-08-18
+
 ### Changed
 
 - Make CBC be the default cipher mode
