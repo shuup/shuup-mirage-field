@@ -28,7 +28,7 @@ class Migrator:
     def decrypt_to(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
         return self.executor(apps, schema_editor, offset, total, limit, method="decrypt_to")
 
-    def executor(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000, method=None):
+    def executor(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000, method=None):  # noqa: C901
         if not method:
             return
 
