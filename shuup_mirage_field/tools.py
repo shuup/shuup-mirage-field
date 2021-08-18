@@ -1,6 +1,5 @@
 from django.apps import apps as installed_apps
 from django.db import connections, router
-from tqdm import tqdm
 
 from .crypto import Crypto
 
@@ -91,7 +90,6 @@ class Migrator:
         db_alias, db_table = self.get_db_parameters(apps, model, schema_editor)
         limit, total = self.calculate_total_and_limit(model, db_alias, limit, total)
 
-        t = tqdm(total=total - offset)
         while offset < total:
             value_list = []
             with connections[db_alias].cursor() as cursor:
@@ -108,9 +106,6 @@ class Migrator:
                 cursor.execute(execute_sql)
             if value_list:
                 if limit == -1:
-                    t.update(len(value_list) - offset)
                     offset = total
                 else:
-                    t.update(value_list[-1][0] - offset)
                     offset = value_list[-1][0]
-        t.close()
