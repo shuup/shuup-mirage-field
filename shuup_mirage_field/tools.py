@@ -28,17 +28,18 @@ class Migrator:
     def decrypt_to(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000):
         return self.executor(apps, schema_editor, offset, total, limit, method="decrypt_to")
 
-    def get_db_parameters(self, apps=None, model=None, schema_editor=None):
+    def executor(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000, method=None):
+        if not method:
+            return
+
         if not apps:
             apps = installed_apps
+        model = apps.get_model(self.app, self.model)
         if not schema_editor:
             db_alias = router.db_for_write(model=model)
         else:
             db_alias = schema_editor.connection.alias
         db_table = model._meta.db_table if model._meta.db_table else f"{self.app}_{self.model}"
-        return db_alias, db_table
-
-    def calculate_total_and_limit(self, model, db_alias, limit, total):
         if limit == -1:
             total = model.objects.using(db_alias).count()
         else:
@@ -50,45 +51,6 @@ class Migrator:
                     total = 0
             if limit > total:
                 limit = total
-        return limit, total
-
-    def process_cursor(self, cursor, method, value_list):
-        value_list = []
-        for query in cursor.fetchall():
-            if method in ["encrypt", "encrypt_to"]:
-                value_list.append([query[0], self.crypto.encrypt(query[1])])
-            elif method in ["decrypt", "decrypt_to"]:
-                text = self.crypto.decrypt(query[1]) or ""
-                value_list.append([query[0], text.replace("'", "''")])
-            elif method == "copy_to":
-                text = query[1] or ""
-                value_list.append([query[0], text.replace("'", "''")])
-        return value_list
-
-    def process_value_list(self, db_table, method, value_list):
-        execute_sql = ""
-        for value in value_list:
-            if method in ["encrypt", "decrypt"]:
-                if value[1] is None:
-                    execute_sql += f"update {db_table} set {self.field}=NULL where {self.idfield}='{value[0]}';"
-                else:
-                    execute_sql += f"update {db_table} set {self.field}='{value[1]}' where {self.idfield}='{value[0]}';"
-            elif method in ["copy_to", "encrypt_to", "decrypt_to"]:
-                if value[1] is None:
-                    execute_sql += f"update {db_table} set {self.tofield}=NULL where {self.idfield}='{value[0]}';"
-                else:
-                    execute_sql += (
-                        f"update {db_table} set {self.tofield}='{value[1]}' where {self.idfield}='{value[0]}';"
-                    )
-        return execute_sql
-
-    def executor(self, apps=None, schema_editor=None, offset=0, total=None, limit=1000, method=None):
-        if not method:
-            return
-
-        model = apps.get_model(self.app, self.model)
-        db_alias, db_table = self.get_db_parameters(apps, model, schema_editor)
-        limit, total = self.calculate_total_and_limit(model, db_alias, limit, total)
 
         while offset < total:
             value_list = []
@@ -97,12 +59,36 @@ class Migrator:
                     cursor.execute(f"select {self.idfield}, {self.field} from {db_table};")
                 else:
                     cursor.execute(
-                        f"select {self.idfield}, {self.field} from {db_table} where {self.idfield}>{offset} "
-                        f"order by {self.idfield} limit {limit};"
+                        f"select {self.idfield}, {self.field} from {db_table} where "
+                        f"{self.idfield}>{offset} order by {self.idfield} limit {limit};"
                     )
-                cursor_value_list = self.process_cursor(cursor, method)
-                value_list.extend(cursor_value_list)
-                execute_sql = self.process_value_list(db_table, method, value_list)
+                for query in cursor.fetchall():
+                    if method in ["encrypt", "encrypt_to"]:
+                        value_list.append([query[0], self.crypto.encrypt(query[1])])
+                    elif method in ["decrypt", "decrypt_to"]:
+                        text = self.crypto.decrypt(query[1]) or ""
+                        value_list.append([query[0], text.replace("'", "''")])
+                    elif method == "copy_to":
+                        text = query[1] or ""
+                        value_list.append([query[0], text.replace("'", "''")])
+                execute_sql = ""
+                for value in value_list:
+                    if method in ["encrypt", "decrypt"]:
+                        if value[1] is None:
+                            execute_sql += f"update {db_table} set {self.field}=NULL where {self.idfield}='{value[0]}';"
+                        else:
+                            execute_sql += (
+                                f"update {db_table} set {self.field}='{value[1]}' where {self.idfield}='{value[0]}';"
+                            )
+                    elif method in ["copy_to", "encrypt_to", "decrypt_to"]:
+                        if value[1] is None:
+                            execute_sql += (
+                                f"update {db_table} set {self.tofield}=NULL where {self.idfield}='{value[0]}';"
+                            )
+                        else:
+                            execute_sql += (
+                                f"update {db_table} set {self.tofield}='{value[1]}' where {self.idfield}='{value[0]}';"
+                            )
                 cursor.execute(execute_sql)
             if value_list:
                 if limit == -1:
