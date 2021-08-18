@@ -58,9 +58,9 @@ class Crypto:
         assert len(key) >= 32, "mirage key length must more than 32!"
         key = base64.urlsafe_b64encode(force_bytes(key))[:32]
         if mode is None:
-            mode = getattr(settings, "MIRAGE_CIPHER_MODE", "ECB")
+            mode = getattr(settings, "MIRAGE_CIPHER_MODE", "CBC")
         if iv is None:
-            iv = getattr(settings, "MIRAGE_CIPHER_IV", "1234567890abcdef")
+            iv = getattr(settings, "MIRAGE_CIPHER_IV", "1234567890shuup0")
         self.cipher = eval(f"{mode}Cipher")(key=key, iv=force_bytes(iv))
 
     def encrypt(self, text):
